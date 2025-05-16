@@ -1,0 +1,5 @@
+Flask
+happybase
+python-dotenv
+gunicorn
+

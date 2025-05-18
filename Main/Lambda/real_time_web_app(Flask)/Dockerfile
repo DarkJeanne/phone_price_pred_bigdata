@@ -1,24 +1,30 @@
-# Sử dụng một base image Python chính thức
+# Use an official Python image
 FROM python:3.9-slim
 
-# Đặt thư mục làm việc trong container
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PIP_DEFAULT_TIMEOUT=300 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
+
+# Set working directory
 WORKDIR /app
 
-# Sao chép file requirements.txt của Flask app
+# Cài đặt các gói phụ thuộc cần thiết
+RUN apt-get update && apt-get install -y gcc g++ && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements.txt
 COPY ./requirements.txt .
 
-# Cài đặt các thư viện
-RUN pip install --no-cache-dir -r requirements.txt
+# Install dependencies
+RUN pip install --timeout=600 --retries=20 --no-cache-dir -r requirements.txt
 
-# Sao chép toàn bộ nội dung của thư mục Flask app vào thư mục làm việc trong container
+# Copy all app files
 COPY . .
 
-# Expose cổng mà Flask app sẽ chạy (được cấu hình bởi FLASK_APP_PORT trong .env)
-# CMD sẽ sử dụng biến môi trường này
-# EXPOSE ${FLASK_APP_PORT} # Không cần thiết vì cổng được map trong docker-compose
-
-# Lệnh để chạy ứng dụng khi container khởi động, sử dụng Gunicorn
-# FLASK_APP_PORT sẽ được đọc từ environment variables (set via .env file in docker-compose)
-# Set default for Gunicorn CMD if FLASK_APP_PORT is not passed from docker-compose .env
+# Set Flask port (default 5001 if not specified)
 ENV FLASK_APP_PORT=${FLASK_APP_PORT:-5001}
-CMD ["gunicorn", "--bind", "0.0.0.0:${FLASK_APP_PORT}", "app:app"] 
+
+# Command to run the app using Gunicorn
+CMD gunicorn --bind 0.0.0.0:5001 app:app 

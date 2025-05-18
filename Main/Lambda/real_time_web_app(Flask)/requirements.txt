@@ -1,5 +1,5 @@
 Flask
-happybase
 python-dotenv
 gunicorn
+happybase==1.2.0
 

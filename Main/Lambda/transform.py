@@ -1,5 +1,6 @@
 import pickle
 import ast
+import os
 from xgboost import XGBRegressor
 
 BRAND_TO_NUMERIC = {
@@ -32,7 +33,9 @@ def map_numeric_to_sim_type(number):
     return NUMERIC_TO_SIM_TYPE.get(number, DEFAULT_SIM_TYPE_STRING)
 
 def transformation(original_list):
-    model = pickle.load(open('ML_operations/xgb_model.pkl', 'rb'))
+    # Use a more robust path that works in different environments
+    model_path = os.path.join(os.path.dirname(__file__), 'ML_operations', 'xgb_model.pkl')
+    model = pickle.load(open(model_path, 'rb'))
 
     print(original_list)
     # Ensure original_list is a list, not a string representation of a list

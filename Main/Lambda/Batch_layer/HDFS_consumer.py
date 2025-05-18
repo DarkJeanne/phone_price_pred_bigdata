@@ -1,7 +1,7 @@
 import os
 from kafka import KafkaConsumer
 import json
-from .put_data_hdfs import store_data_in_hdfs
+from put_data_hdfs import store_data_in_hdfs
 from dotenv import load_dotenv
 
 load_dotenv()

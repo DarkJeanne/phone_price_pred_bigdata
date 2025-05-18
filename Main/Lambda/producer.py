@@ -3,10 +3,11 @@ from kafka import KafkaProducer
 from dotenv import load_dotenv
 import json
 
-load_dotenv() # Tải biến từ .env file (nếu có, hữu ích khi chạy local ngoài Docker)
-
-bootstrap_servers = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
+load_dotenv()
+bootstrap_servers = os.getenv('KAFKA_BROKER_INTERNAL', 'kafka:9092')
 topic = os.getenv('KAFKA_SMARTPHONE_TOPIC', 'smartphoneTopic')
+
+print(f"Connecting to Kafka at {bootstrap_servers}, topic: {topic}")
 
 producer = KafkaProducer(
     bootstrap_servers=bootstrap_servers,

@@ -210,8 +210,8 @@ if __name__ == "__main__":
 
     # MongoDB connection logic updated
     mongo_connection_uri_from_env = os.getenv('MONGO_CONNECTION_URI')
-    mongo_db_target = os.getenv('MONGO_DB_NAME', 'bigdataProject') # DB to write to
-    mongo_collection_target = os.getenv('MONGO_TRANSFORMED_SMARTPHONE_COLLECTION', 'smartphonesTransformed')
+    mongo_db_target = os.getenv('MONGO_DB_NAME', 'phone_price_pred') # DB to write to
+    mongo_collection_target = os.getenv('MONGO_TRANSFORMED_SMARTPHONE_COLLECTION', 'smartphones')
 
     actual_mongo_uri_to_use = ""
 

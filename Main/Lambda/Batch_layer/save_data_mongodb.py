@@ -8,7 +8,7 @@ load_dotenv()
 def get_mongo_client():
     mongo_connection_uri_env = os.getenv('MONGO_CONNECTION_URI')
     # MONGO_DB_NAME will be used to select the database after connection
-    mongo_db_name_for_operation = os.getenv('MONGO_DB_NAME', 'BigDataProjectDB') 
+    mongo_db_name_for_operation = os.getenv('MONGO_DB_NAME', 'phone_price_pred') 
 
     if mongo_connection_uri_env:
         print(f"Connecting to MongoDB with provided URI: [SENSITIVE]")

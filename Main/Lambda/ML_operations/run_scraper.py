@@ -6,7 +6,6 @@ import time
 import json
 import re
 
-# Class gsmarena scrap the website phones models and its devices and save to csv file individually.
 class Gsmarena():
 
     # Constructor to initialize common useful varibales throughout the program.
@@ -22,11 +21,10 @@ class Gsmarena():
 
     # This function crawl the html code of the requested URL.
     def crawl_html_page(self, sub_url):
-        full_url = self.url + sub_url  # Url for html content parsing.
-        # IMPORTANT: Replace with your actual User-Agent
+        full_url = self.url + sub_url  
         header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"} # Example User-Agent
         print(f"Requesting: {full_url}")
-        time.sleep(10)  # Adjusted sleep time, be mindful of server load.
+        time.sleep(10)  
         
         try:
             page = requests.get(full_url, timeout=15, headers=header)

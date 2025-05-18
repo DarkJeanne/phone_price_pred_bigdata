@@ -8,9 +8,6 @@ from xgboost.spark import XGBoostRegressor
 import os
 
 # --- Configuration & Mappings (mirrored from transform.py) ---
-# We will use Company Name directly, then map to numeric if we stick to the old approach
-# or use StringIndexer for Spark ML if preferred (more robust for new brands).
-# For now, sticking to explicit mapping to align with transform.py
 BRAND_TO_NUMERIC = {
     'Maxfone': 1, 'Infinix': 2, 'Freeyond': 3, 'XIAOMI': 4,
     'Tecno': 5, 'Oppo': 6, 'Nokia': 7, 'Samsung': 8,
@@ -19,9 +16,6 @@ BRAND_TO_NUMERIC = {
     # Add more brands from the new dataset. If a brand is not here, it will get DEFAULT_BRAND_NUMERIC
 }
 DEFAULT_BRAND_NUMERIC = 100 # A new default for unmapped brands in this dataset
-
-# SIM Type is not in the new dataset, so we will remove it from features for now.
-# If SIM type becomes available, it can be re-added.
 
 # --- UDFs for Spark DataFrame transformations ---
 @udf(returnType=IntegerType())
@@ -100,9 +94,7 @@ def train_model():
     # Features for the model (SIM type removed as it's not in this dataset)
     feature_cols_for_assembler = [
         "brand_numeric", "screen_size_float", "ram_float", "battery_float"
-        # Removed "storage_float" as "Storage" or "ROM" is not in the provided CSV header snippet.
-        # If you have a storage column (e.g., from 'Mobile Weight' if it implies storage, or another col),
-        # add it here and create a cleaning UDF for it.
+
     ]
     
     # Check if all assembler input columns are present after UDFs
@@ -145,7 +137,6 @@ def train_model():
         featuresCol="features",
         labelCol="label",
         maxDepth=5 
-        # Add other XGBoost parameters as needed
     )
 
     model = xgboost_regressor.fit(train_df)

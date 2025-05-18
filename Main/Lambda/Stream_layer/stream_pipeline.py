@@ -1,4 +1,5 @@
 import time
+import os
 from producer import send_message
 from Stream_layer.ML_consumer import consum
 import threading
@@ -8,7 +9,8 @@ from Stream_data.stream_data import generate_real_time_data
 def producer_thread():
     while True:
         try:
-            file_path = '../Stream_data/stream_data.csv'
+            # Use a relative path that works with the import structure
+            file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Stream_data', 'stream_data.csv')
             message = generate_real_time_data(file_path)
 
             send_message(message)

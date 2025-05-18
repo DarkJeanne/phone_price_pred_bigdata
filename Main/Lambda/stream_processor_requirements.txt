@@ -3,5 +3,4 @@ python-dotenv
 pandas
 scikit-learn
 joblib
-happybase
 xgboost

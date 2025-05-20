@@ -93,10 +93,31 @@ def transform_data(spark_df):
     spark_df.printSchema()
 
     # Load pre-trained XGBoost model
-    model_path = "xgb_model.pkl" # Assume it's in CWD or accessible path
+    # Try multiple potential locations for the model file
+    model_path = None
+    possible_paths = [
+        "xgb_model.pkl",  # Current working directory
+        "/opt/spark/apps/ml_ops/xgb_model.pkl",  # Mount from docker-compose
+        "/opt/spark/apps/batch_layer/xgb_model.pkl",  # Copied by command
+        os.path.join(os.path.dirname(__file__), "xgb_model.pkl"),  # Same dir as script
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "ML_operations", "xgb_model.pkl"),  # Parent dir
+    ]
+    
+    # Try finding the model file
+    for path in possible_paths:
+        if os.path.exists(path):
+            model_path = path
+            print(f"Found model at: {model_path}")
+            break
+    
+    if model_path is None:
+        print(f"Error: Model file not found. Searched paths: {possible_paths}")
+        return None
+        
     try:
         with open(model_path, "rb") as f:
             model = pickle.load(f)
+            print(f"Successfully loaded model from {model_path}")
     except FileNotFoundError:
         print(f"Error: Model file '{model_path}' not found.")
         return None
@@ -137,8 +158,24 @@ def transform_data(spark_df):
 
     else:
         print(f"Pandas DataFrame for prediction shape: {pandas_df_for_prediction.shape}")
-        # Ensure columns are in the same order as expected by the model if it's sensitive
-        predictions = model.predict(pandas_df_for_prediction[feature_cols])
+        
+        # Fix feature name mismatch - rename columns to match what model expects
+        # The model wants: ['brand', 'screen_size', 'ram', 'rom', 'sim_type', 'battary']
+        # We have: ['brand_numeric', 'screen_size', 'ram', 'rom', 'sim_type_numeric', 'battary']
+        column_mapping = {
+            'brand_numeric': 'brand',
+            'sim_type_numeric': 'sim_type'
+        }
+        
+        # Create a new DataFrame with the correct column names
+        prediction_df = pandas_df_for_prediction.rename(columns=column_mapping)
+        
+        # Ensure columns are in the same order as expected by the model
+        model_feature_cols = ['brand', 'screen_size', 'ram', 'rom', 'sim_type', 'battary']
+        print(f"Using features with correct names: {model_feature_cols}")
+        
+        # Make predictions
+        predictions = model.predict(prediction_df[model_feature_cols])
         
         # Add predicted prices as a new column
         # Need to join predictions back to the Spark DataFrame. This is tricky due to order.
@@ -147,7 +184,7 @@ def transform_data(spark_df):
         
         # This approach is fragile if rows were dropped by handleInvalid="skip" or if order is not guaranteed
         # A safer way: add predictions to pandas_df_for_prediction, then convert back to Spark and join
-        pandas_df_for_prediction['predicted_price'] = predictions
+        prediction_df['predicted_price'] = predictions
         
         # Select original id columns if available to join back
         # For example, if 'id' is a unique identifier from the original data

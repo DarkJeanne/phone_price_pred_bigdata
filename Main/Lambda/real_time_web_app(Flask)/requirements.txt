@@ -1,5 +1,9 @@
-Flask
-python-dotenv
-gunicorn
+Flask==2.3.3
+python-dotenv==1.0.0
+gunicorn==21.2.0
 happybase==1.2.0
+thrift==0.16.0
+six==1.16.0
+Werkzeug==2.3.7
+Jinja2==3.1.2
 

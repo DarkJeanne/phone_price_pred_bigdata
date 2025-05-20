@@ -33,10 +33,34 @@ def map_numeric_to_sim_type(number):
     return NUMERIC_TO_SIM_TYPE.get(number, DEFAULT_SIM_TYPE_STRING)
 
 def transformation(original_list):
-    # Use a more robust path that works in different environments
-    model_path = os.path.join(os.path.dirname(__file__), 'ML_operations', 'xgb_model.pkl')
-    model = pickle.load(open(model_path, 'rb'))
-
+    # Try multiple possible locations for the model file
+    model = None
+    possible_paths = [
+        os.path.join(os.path.dirname(__file__), 'ML_operations', 'xgb_model.pkl'),  # Relative to this file
+        os.path.join(os.path.dirname(__file__), 'ml_ops', 'xgb_model.pkl'),         # Alternate folder name
+        os.path.join(os.getcwd(), 'xgb_model.pkl'),                                 # Current working directory
+        os.path.join(os.getcwd(), 'ML_operations', 'xgb_model.pkl'),                # Relative to CWD
+        '/opt/app/ML_operations/xgb_model.pkl',                                     # Docker mount path
+        '/opt/spark/apps/ml_ops/xgb_model.pkl',                                     # Spark mount path
+        'xgb_model.pkl'                                                              # Direct filename
+    ]
+    
+    # Try each path
+    for path in possible_paths:
+        try:
+            if os.path.exists(path):
+                print(f"Found model at {path}")
+                with open(path, 'rb') as f:
+                    model = pickle.load(f)
+                break
+        except Exception as e:
+            print(f"Error loading model from {path}: {e}")
+    
+    if model is None:
+        print(f"Could not find model file in any of the expected locations: {possible_paths}")
+        return []
+        
+    # Continue with the rest of the function
     print(original_list)
     # Ensure original_list is a list, not a string representation of a list
     if isinstance(original_list, str):

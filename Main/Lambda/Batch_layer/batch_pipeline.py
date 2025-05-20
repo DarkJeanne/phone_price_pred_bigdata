@@ -10,8 +10,16 @@ from Stream_data.stream_data import generate_real_time_data
 def producer_thread():
     while True:
         try:
-            # Use a relative path that works with the import structure
-            file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Stream_data', 'stream_data.csv')
+            # Fix path issue - Use absolute path to Stream_data/stream_data.csv
+            file_path = '/app/Stream_data/stream_data.csv'
+            # Check if file exists before trying to use it
+            if not os.path.exists(file_path):
+                print(f"Error: File {file_path} not found")
+                print(f"Current working directory: {os.getcwd()}")
+                print(f"Files in /app/Stream_data/: {os.listdir('/app/Stream_data')}")
+                time.sleep(5)
+                continue
+                
             message = generate_real_time_data(file_path)
 
             send_message(message)

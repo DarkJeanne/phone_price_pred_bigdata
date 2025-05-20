@@ -9,8 +9,6 @@ from .insert_data_hbase import insert_dataHbase
 load_dotenv()
 
 def consum():
-    # Kafka broker configuration
-    # bootstrap_servers = 'localhost:9092'
     bootstrap_servers = os.getenv('KAFKA_BROKER_INTERNAL', 'kafka:9092')
     topic = os.getenv('KAFKA_SMARTPHONE_TOPIC', 'smartphoneTopic')
 

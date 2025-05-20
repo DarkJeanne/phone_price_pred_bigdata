@@ -7,11 +7,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def consum_hdfs():
-    # Kafka broker configuration
     bootstrap_servers = os.getenv('KAFKA_BROKER_INTERNAL', 'kafka:9092')
     topic = os.getenv('KAFKA_SMARTPHONE_TOPIC', 'smartphoneTopic')
 
-    # Create a Kafka consumer
     consumer = KafkaConsumer(topic,
                              group_id=os.getenv('HDFS_CONSUMER_GROUP_ID', 'hdfs_consumer_group'),
                              auto_offset_reset='latest',

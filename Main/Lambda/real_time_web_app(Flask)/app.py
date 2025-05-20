@@ -1,7 +1,6 @@
 import os
 import logging
 from flask import Flask, render_template, jsonify
-# Giả sử get_Data_from_hbase.py cũng sẽ được cập nhật để dùng biến môi trường cho HBase
 from get_Data_from_hbase import get_last_record_from_hbase 
 from dotenv import load_dotenv
 
@@ -35,7 +34,7 @@ def health():
 
 
 if __name__ == '__main__':
-    host = os.getenv('FLASK_APP_HOST', '0.0.0.0')  # Default to 0.0.0.0 to be accessible from outside container
+    host = os.getenv('FLASK_APP_HOST', '0.0.0.0')
     port = int(os.getenv('FLASK_APP_PORT', '5001'))
     debug_mode = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
     

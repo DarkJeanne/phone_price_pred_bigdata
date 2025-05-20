@@ -33,19 +33,17 @@ def map_numeric_to_sim_type(number):
     return NUMERIC_TO_SIM_TYPE.get(number, DEFAULT_SIM_TYPE_STRING)
 
 def transformation(original_list):
-    # Try multiple possible locations for the model file
     model = None
     possible_paths = [
-        os.path.join(os.path.dirname(__file__), 'ML_operations', 'xgb_model.pkl'),  # Relative to this file
-        os.path.join(os.path.dirname(__file__), 'ml_ops', 'xgb_model.pkl'),         # Alternate folder name
-        os.path.join(os.getcwd(), 'xgb_model.pkl'),                                 # Current working directory
-        os.path.join(os.getcwd(), 'ML_operations', 'xgb_model.pkl'),                # Relative to CWD
-        '/opt/app/ML_operations/xgb_model.pkl',                                     # Docker mount path
-        '/opt/spark/apps/ml_ops/xgb_model.pkl',                                     # Spark mount path
-        'xgb_model.pkl'                                                              # Direct filename
+        os.path.join(os.path.dirname(__file__), 'ML_operations', 'xgb_model.pkl'),
+        os.path.join(os.path.dirname(__file__), 'ml_ops', 'xgb_model.pkl'),
+        os.path.join(os.getcwd(), 'xgb_model.pkl'),
+        os.path.join(os.getcwd(), 'ML_operations', 'xgb_model.pkl'),
+        '/opt/app/ML_operations/xgb_model.pkl',
+        '/opt/spark/apps/ml_ops/xgb_model.pkl',
+        'xgb_model.pkl'
     ]
     
-    # Try each path
     for path in possible_paths:
         try:
             if os.path.exists(path):
@@ -60,29 +58,24 @@ def transformation(original_list):
         print(f"Could not find model file in any of the expected locations: {possible_paths}")
         return []
         
-    # Continue with the rest of the function
     print(original_list)
-    # Ensure original_list is a list, not a string representation of a list
     if isinstance(original_list, str):
         try:
             original_list = ast.literal_eval(original_list)
         except (ValueError, SyntaxError) as e:
             print(f"Error evaluating string to list: {e}. Returning empty list.")
-            return [] # Or handle error as appropriate
+            return []
     
-    if not isinstance(original_list, list) or len(original_list) < 9: # check length based on expected indices
+    if not isinstance(original_list, list) or len(original_list) < 9:
         print(f"Invalid input format or insufficient data: {original_list}. Returning empty list.")
-        return [] # Or handle error
+        return []
 
-
-    # Defensive checks for indices before accessing
     brand_value = original_list[1] if len(original_list) > 1 else None
-    screen_size_value = original_list[3] if len(original_list) > 3 else '0' # Default to '0' if missing
+    screen_size_value = original_list[3] if len(original_list) > 3 else '0'
     ram_value = original_list[4] if len(original_list) > 4 else '0'
     storage_value = original_list[5] if len(original_list) > 5 else '0'
     sim_type_value = original_list[7] if len(original_list) > 7 else None
     battery_value = original_list[8] if len(original_list) > 8 else '0'
-
 
     try:
         new_list = [
@@ -95,19 +88,18 @@ def transformation(original_list):
         ]
     except ValueError as e:
         print(f"Error converting to float: {e}. Input: {original_list}. Returning empty list.")
-        return [] # Or handle error
+        return []
 
     print(new_list)
 
     price = model.predict([new_list])
 
-    # Convert numeric representations back to strings for the output list
-    new_list[0] = map_numeric_to_brand(new_list[0]) # No need to float here, keys are int
-    new_list[4] = map_numeric_to_sim_type(new_list[4]) # No need to float here
+    new_list[0] = map_numeric_to_brand(new_list[0])
+    new_list[4] = map_numeric_to_sim_type(new_list[4])
 
     print(new_list)
 
-    new_list.append(float(price[0])) # Ensure price is a single float
+    new_list.append(float(price[0]))
 
     return new_list
 

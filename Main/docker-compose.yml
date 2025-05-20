@@ -15,6 +15,8 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    networks:
+      - data_pipeline_net
 
   kafka:
     image: confluentinc/cp-kafka:7.3.2
@@ -40,6 +42,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    networks:
+      - data_pipeline_net
 
   hbase:
     image: harisekhon/hbase:1.4
@@ -47,9 +51,9 @@ services:
     hostname: hbase
     restart: unless-stopped
     ports:
-      - "9090:9090"  # HBase Thrift server
-      - "9095:9095"  # HBase REST server
-      - "16010:16010"  # HBase Master UI
+      - "9090:9090"
+      - "9095:9095"
+      - "16010:16010"
     environment:
       HBASE_MANAGES_ZK: "false"
       HBASE_ZOOKEEPER_QUORUM: zookeeper
@@ -62,6 +66,8 @@ services:
       zookeeper:
         condition: service_healthy
     command: ["/start-hbase.sh"]
+    networks:
+      - data_pipeline_net
 
   hadoop:
     image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
@@ -69,9 +75,9 @@ services:
     hostname: hadoop
     restart: unless-stopped
     ports:
-      - "9870:9870"  # Namenode Web UI
-      - "9000:9000"  # HDFS default port
-      - "9864:9864"  # Datanode Web UI
+      - "9870:9870"
+      - "9000:9000"
+      - "9864:9864"
     volumes:
       - hadoop_namenode:/hadoop/dfs/name
     environment:
@@ -91,6 +97,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    networks:
+      - data_pipeline_net
 
   hadoop-datanode:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
@@ -110,6 +118,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    networks:
+      - data_pipeline_net
 
   spark-master:
     build:
@@ -134,6 +144,8 @@ services:
       timeout: 10s
       retries: 5
       start_period: 45s
+    networks:
+      - data_pipeline_net
 
   spark-worker:
     build:
@@ -155,6 +167,8 @@ services:
       - ./Lambda/transform.py:/opt/spark/apps/transform.py
     env_file: .env
     command: "/opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077"
+    networks:
+      - data_pipeline_net
 
   spark-batch-job:
     build:
@@ -163,6 +177,8 @@ services:
     container_name: spark-batch-job
     depends_on:
       spark-master:
+        condition: service_healthy
+      hadoop:
         condition: service_healthy
     volumes:
       - ./Lambda/Batch_layer:/opt/spark/apps/batch_layer
@@ -175,10 +191,13 @@ services:
       - HDFS_NAMENODE_HOST_INTERNAL=hadoop
     command: >
       /bin/bash -c "
-        cd /opt/spark/apps &&
-        cp ml_ops/xgb_model.pkl batch_layer/ &&
-        /opt/spark/bin/spark-submit --master spark://spark-master:7077 --deploy-mode client --py-files transform.py batch_layer/spark_tranformation.py
+        rm -rf /home/spark/.ivy2/cache/* && \
+        cd /opt/spark/apps && \
+        cp ml_ops/xgb_model.pkl batch_layer/ && \
+        /opt/spark/bin/spark-submit --verbose --master spark://spark-master:7077 --deploy-mode client --packages org.mongodb.spark:mongo-spark-connector_2.12:3.0.1 --py-files transform.py batch_layer/spark_tranformation.py
       "
+    networks:
+      - data_pipeline_net
 
   stream-processor:
     build:
@@ -202,6 +221,8 @@ services:
       - ./Lambda/ML_operations:/opt/app/ML_operations
       - ./Lambda/transform.py:/opt/app/transform.py
       - ./Lambda/producer.py:/opt/app/producer.py
+    networks:
+      - data_pipeline_net
 
   batch-processor:
     build:
@@ -212,7 +233,7 @@ services:
       kafka:
         condition: service_healthy
       hadoop:
-        condition: service_started
+        condition: service_healthy
     env_file: .env
     environment:
       KAFKA_BROKER_INTERNAL: kafka:9092
@@ -224,6 +245,8 @@ services:
       - ./Lambda/Stream_data:/app/Stream_data
       - ./Lambda/transform.py:/app/transform.py
       - ./Lambda/producer.py:/app/producer.py
+    networks:
+      - data_pipeline_net
 
   flask-app:
     build:
@@ -240,7 +263,13 @@ services:
       HBASE_HOST: "hbase"
       HBASE_PORT: "9090"
       HBASE_SMARTPHONE_TABLE: "smartphone"
+    networks:
+      - data_pipeline_net
 
 volumes:
   hadoop_namenode:
   hadoop_datanode:
+
+networks:
+  data_pipeline_net:
+    driver: bridge
